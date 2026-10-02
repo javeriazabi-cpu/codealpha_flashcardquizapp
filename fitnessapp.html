@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fitness Tracker App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background-color: #f4f7f6;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .tracker-card {
+      background: #ffffff;
+      width: 100%;
+      max-width: 400px;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 15px;
+    }
+
+    /* Summary Dashboard */
+    .summary {
+      background: #eef2f5;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+
+    .stat {
+      font-size: 0.95rem;
+      margin-bottom: 5px;
+      color: #555;
+    }
+
+    .stat strong {
+      color: #2c3e50;
+    }
+
+    /* Form Fields */
+    form select, 
+    form input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+
+    .btn-add {
+      width: 100%;
+      padding: 10px;
+      background-color: #2ecc71;
+      color: white;
+      margin-bottom: 15px;
+    }
+
+    .btn-add:hover {
+      background-color: #27ae60;
+    }
+
+    .btn-clear {
+      width: 100%;
+      padding: 8px;
+      background-color: #e74c3c;
+      color: white;
+      margin-top: 10px;
+    }
+
+    .btn-clear:hover {
+      background-color: #c0392b;
+    }
+
+    /* Activity List */
+    ul {
+      list-style: none;
+    }
+
+    li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #fafafa;
+      border: 1px solid #eee;
+      padding: 8px 10px;
+      border-radius: 4px;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+    }
+
+    li button {
+      background: transparent;
+      color: #e74c3c;
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="tracker-card">
+    <h2>Fitness Tracker</h2>
+
+    <!-- Summary Dashboard -->
+    <div class="summary">
+      <div class="stat">Steps: <strong id="total-steps">0</strong></div>
+      <div class="stat">Calories: <strong id="total-cals">0</strong> kcal</div>
+      <div class="stat">Time: <strong id="total-time">0</strong> mins</div>
+    </div>
+
+    <!-- Log Activity Form -->
+    <form id="tracker-form">
+      <select id="type" required>
+        <option value="">Select Activity</option>
+        <option value="Running">Running</option>
+        <option value="Walking">Walking</option>
+        <option value="Gym">Gym</option>
+        <option value="Cycling">Cycling</option>
+      </select>
+      <input type="number" id="steps" placeholder="Steps" value="0">
+      <input type="number" id="duration" placeholder="Duration (mins)" required>
+      <input type="number" id="calories" placeholder="Calories Burned" required>
+      <button type="submit" class="btn-add">Add Log</button>
+    </form>
+
+    <!-- Activity List -->
+    <ul id="log-list"></ul>
+    <button onclick="clearData()" class="btn-clear">Clear All</button>
+  </div>
+
+  <script>,
+    let logs = JSON.parse(localStorage.getItem('fitness_logs')) || [];
+
+    function update() {
+      localStorage.setItem('fitness_logs', JSON.stringify(logs));
+      const list = document.getElementById('log-list');
+      list.innerHTML = '';
+      let steps = 0, cals = 0, time = 0;
+
+      logs.forEach((item, index) => {
+        steps += item.steps; 
+        cals += item.cals; 
+        time += item.time;
+        list.innerHTML += `<li>${item.type}: ${item.time}m | ${item.steps}s | ${item.cals}cal 
+          <button onclick="removeLog(${index})">&times;</button></li>`;
+      });
+
+      document.getElementById('total-steps').innerText = steps;
+      document.getElementById('total-cals').innerText = cals;
+      document.getElementById('total-time').innerText = time;
+    }
+
+    document.getElementById('tracker-form').onsubmit = (e) => {
+      e.preventDefault();
+      logs.push({
+        type: document.getElementById('type').value,
+        steps: +document.getElementById('steps').value || 0,
+        time: +document.getElementById('duration').value || 0,
+        cals: +document.getElementById('calories').value || 0
+      });
+      e.target.reset();
+      update();
+    };
+
+    function removeLog(i) { 
+      logs.splice(i, 1); 
+      update(); 
+    }
+
+    function clearData() { 
+      logs = []; 
+      update(); 
+    }
+
+    update();
+  </script>
+</body>
+</html>
