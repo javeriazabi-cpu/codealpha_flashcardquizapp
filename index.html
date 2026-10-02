@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flashcard Quiz App</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f4f7f6; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+    h1 { color: #333; }
+    .container { width: 100%; max-width: 500px; }
+    .card { background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); min-height: 200px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; margin-bottom: 20px; transition: transform 0.2s; }
+    .card h3 { margin-bottom: 10px; color: #555; }
+    .card p { font-size: 1.2rem; color: #111; font-weight: bold; }
+    .hidden { display: none; }
+    .nav-btn, .action-btn { background: #007bff; color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-size: 0.95rem; margin: 4px; }
+    .nav-btn:hover, .action-btn:hover { background: #0056b3; }
+    .delete-btn { background: #dc3545; }
+    .delete-btn:hover { background: #bd2130; }
+    .edit-btn { background: #ffc107; color: #212529; }
+    .edit-btn:hover { background: #e0a800; }
+    .controls, .card-actions { display: flex; justify-content: space-between; width: 100%; margin-bottom: 15px; }
+    .form-container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-top: 15px; }
+    .form-container input { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Flashcard Quiz App</h1>
+
+  <!-- Flashcard Display -->
+  <div class="card">
+    <div id="card-content">
+      <h3 id="card-label">Question</h3>
+      <p id="card-text">Loading...</p>
+    </div>
+    <button class="action-btn" id="toggle-answer-btn" onclick="toggleAnswer()">Show Answer</button>
+  </div>
+
+  <!-- Navigation Buttons -->
+  <div class="controls">
+    <button class="nav-btn" onclick="prevCard()">Previous</button>
+    <span id="card-counter">1 / 1</span>
+    <button class="nav-btn" onclick="nextCard()">Next</button>
+  </div>
+
+  <!-- Edit & Delete Buttons -->
+  <div class="card-actions">
+    <button class="action-btn edit-btn" onclick="editCard()">Edit Current Card</button>
+    <button class="action-btn delete-btn" onclick="deleteCard()">Delete Card</button>
+  </div>
+
+  <!-- Add Card Form -->
+  <div class="form-container">
+    <h3>Add / Update Flashcard</h3>
+    <input type="text" id="question-input" placeholder="Enter Question">
+    <input type="text" id="answer-input" placeholder="Enter Answer">
+    <button class="action-btn" onclick="saveCard()">Save Card</button>
+  </div>
+</div>
+
+<script>
+  let cards = JSON.parse(localStorage.getItem('flashcards')) || [
+    { question: "What is the capital of France?", answer: "Paris" },
+    { question: "What language runs in a Web Browser?", answer: "JavaScript" }
+  ];
+
+  let currentIndex = 0;
+  let showingAnswer = false;
+  let editingIndex = -1;
+
+  function updateCardUI() {
+    if (cards.length === 0) {
+      document.getElementById('card-label').innerText = "";
+      document.getElementById('card-text').innerText = "No cards available. Please add one below.";
+      document.getElementById('toggle-answer-btn').style.display = 'none';
+      document.getElementById('card-counter').innerText = "0 / 0";
+      return;
+    }
+
+    document.getElementById('toggle-answer-btn').style.display = 'inline-block';
+    const card = cards[currentIndex];
+    
+    if (showingAnswer) {
+      document.getElementById('card-label').innerText = "Answer";
+      document.getElementById('card-text').innerText = card.answer;
+      document.getElementById('toggle-answer-btn').innerText = "Show Question";
+    } else {
+      document.getElementById('card-label').innerText = "Question";
+      document.getElementById('card-text').innerText = card.question;
+      document.getElementById('toggle-answer-btn').innerText = "Show Answer";
+    }
+
+    document.getElementById('card-counter').innerText = `${currentIndex + 1} / ${cards.length}`;
+  }
+
+  function toggleAnswer() {
+    showingAnswer = !showingAnswer;
+    updateCardUI();
+  }
+
+  function nextCard() {
+    if (cards.length === 0) return;
+    showingAnswer = false;
+    currentIndex = (currentIndex + 1) % cards.length;
+    updateCardUI();
+  }
+
+  function prevCard() {
+    if (cards.length === 0) return;
+    showingAnswer = false;
+    currentIndex = (currentIndex - 1 + cards.length) % cards.length;
+    updateCardUI();
+  }
+
+  function saveCard() {
+    const q = document.getElementById('question-input').value.trim();
+    const a = document.getElementById('answer-input').value.trim();
+
+    if (!q || !a) return alert("Please fill in both fields.");
+
+    if (editingIndex >= 0) {
+      cards[editingIndex] = { question: q, answer: a };
+      editingIndex = -1;
+    } else {
+      cards.push({ question: q, answer: a });
+      currentIndex = cards.length - 1;
+    }
+
+    localStorage.setItem('flashcards', JSON.stringify(cards));
+    document.getElementById('question-input').value = '';
+    document.getElementById('answer-input').value = '';
+    showingAnswer = false;
+    updateCardUI();
+  }
+
+  function editCard() {
+    if (cards.length === 0) return;
+    editingIndex = currentIndex;
+    document.getElementById('question-input').value = cards[currentIndex].question;
+    document.getElementById('answer-input').value = cards[currentIndex].answer;
+  }
+
+  function deleteCard() {
+    if (cards.length === 0) return;
+    cards.splice(currentIndex, 1);
+    if (currentIndex >= cards.length) currentIndex = cards.length - 1;
+    if (currentIndex < 0) currentIndex = 0;
+    localStorage.setItem('flashcards', JSON.stringify(cards));
+    showingAnswer = false;
+    updateCardUI();
+  }
+
+  updateCardUI();
+</script>
+
+</body>
+</html>
