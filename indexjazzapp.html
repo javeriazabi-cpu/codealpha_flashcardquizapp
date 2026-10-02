@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Language Learning App</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #eef2f5; font-family: Arial, sans-serif; padding: 20px; display: flex; justify-content: center; }
+    .app-card { background: white; border-radius: 12px; width: 100%; max-width: 600px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .header { text-align: center; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+    .tabs { display: flex; gap: 10px; margin: 20px 0; }
+    .tab-btn { flex: 1; padding: 12px; border: none; background: #e0e0e0; cursor: pointer; border-radius: 6px; font-weight: bold; }
+    .tab-btn.active { background: #28a745; color: white; }
+    .section { display: none; }
+    .section.active { display: block; }
+    .vocab-card { background: #f8f9fa; border-left: 4px solid #28a745; padding: 15px; margin-bottom: 12px; border-radius: 4px; }
+    .vocab-card h4 { margin: 0 0 5px 0; color: #333; }
+    .vocab-card p { margin: 0; color: #666; }
+    .quiz-option { display: block; width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; background: #fff; border-radius: 6px; cursor: pointer; text-align: left; }
+    .quiz-option:hover { background: #f0f0f0; }
+    .result { font-weight: bold; font-size: 1.1rem; margin-top: 15px; }
+  </style>
+</head>
+<body>
+
+<div class="app-card">
+  <div class="header">
+    <h2>LingoLearn: Spanish Basics</h2>
+    <p>Master vocabulary & test your knowledge</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('lessons')">Lessons</button>
+    <button class="tab-btn" onclick="switchTab('quiz')">Quiz</button>
+  </div>
+
+  <!-- Lessons Section -->
+  <div id="lessons" class="section active">
+    <h3>Daily Vocabulary & Grammar</h3>
+    <div id="vocab-list"></div>
+  </div>
+
+  <!-- Quiz Section -->
+  <div id="quiz" class="section">
+    <h3>Practice Quiz</h3>
+    <div id="quiz-container">
+      <p id="quiz-question" style="font-weight: bold; font-size: 1.1rem;"></p>
+      <div id="quiz-options"></div>
+      <div id="quiz-feedback" class="result"></div>
+      <button id="next-quiz-btn" class="tab-btn active" style="margin-top: 15px; display: none;" onclick="loadNextQuestion()">Next Question</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const vocabulary = [
+    { word: "Hola", translation: "Hello", category: "Vocabulary" },
+    { word: "Gracias", translation: "Thank you", category: "Vocabulary" },
+    { word: "¿Cómo estás?", translation: "How are you?", category: "Phrases" },
+    { word: "Buenos días", translation: "Good morning", category: "Phrases" },
+    { word: "Yo tengo", translation: "I have (Grammar: Tener)", category: "Grammar" }
+  ];
+
+  const quizQuestions = [
+    { question: "What is the translation of 'Gracias'?", options: ["Please", "Thank you", "Goodbye", "Hello"], answer: "Thank you" },
+    { question: "How do you say 'Good morning' in Spanish?", options: ["Buenas noches", "Hola", "Buenos días", "Por favor"], answer: "Buenos días" },
+    { question: "Which phrase means 'How are you?'", options: ["¿Cómo estás?", "Mucho gusto", "De nada", "Yo tengo"], answer: "¿Cómo estás?" }
+  ];
+
+  let currentQuizIndex = 0;
+
+  function renderLessons() {
+    const list = document.getElementById('vocab-list');
+    list.innerHTML = '';
+    vocabulary.forEach(item => {
+      list.innerHTML += `
+        <div class="vocab-card">
+          <h4>${item.word}</h4>
+          <p><strong>Translation:</strong> ${item.translation}</p>
+          <small>Category: ${item.category}</small>
+        </div>
+      `;
+    });
+  }
+
+  function switchTab(tabId) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    
+    document.getElementById(tabId).classList.add('active');
+    event.target.classList.add('active');
+
+    if(tabId === 'quiz') {
+      currentQuizIndex = 0;
+      loadQuizQuestion();
+    }
+  }
+
+  function loadQuizQuestion() {
+    const q = quizQuestions[currentQuizIndex];
+    document.getElementById('quiz-question').innerText = `Question ${currentQuizIndex + 1}: ${q.question}`;
+    document.getElementById('quiz-feedback').innerText = '';
+    document.getElementById('next-quiz-btn').style.display = 'none';
+
+    const optionsContainer = document.getElementById('quiz-options');
+    optionsContainer.innerHTML = '';
+
+    q.options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'quiz-option';
+      btn.innerText = opt;
+      btn.onclick = () => checkAnswer(opt, q.answer);
+      optionsContainer.appendChild(btn);
+    });
+  }
+
+  function checkAnswer(selected, correct) {
+    const feedback = document.getElementById('quiz-feedback');
+    if (selected === correct) {
+      feedback.innerText = "Correct! Great job!";
+      feedback.style.color = "green";
+    } else {
+      feedback.innerText = `Incorrect! The correct answer was "${correct}".`;
+      feedback.style.color = "red";
+    }
+
+    document.querySelectorAll('.quiz-option').forEach(btn => btn.disabled = true);
+    document.getElementById('next-quiz-btn').style.display = 'block';
+  }
+
+  function loadNextQuestion() {
+    currentQuizIndex++;
+    if (currentQuizIndex < quizQuestions.length) {
+      loadQuizQuestion();
+    } else {
+      document.getElementById('quiz-container').innerHTML = `
+        <h4>Quiz Completed! 🎉</h4>
+        <p>You have finished all practice questions for today.</p>
+        <button class="tab-btn active" onclick="location.reload()">Restart Quiz</button>
+      `;
+    }
+  }
+
+  renderLessons();
+</script>
+
+</body>
+</html>
